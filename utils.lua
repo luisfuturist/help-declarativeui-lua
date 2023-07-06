@@ -1,18 +1,33 @@
 local screenWidth, screenHeight = guiGetScreenSize()
 
-local function isSignal(value)
+local function isReactive(value)
     return type(value) == 'table' and type(value.get) == 'function'
 end
 
-local function unwrap(value, default)
+function unwrap(value, default)
     default = default or 0
-    return (value and (isSignal(value) and value.get() or value) or default)
+    return (value and (isReactive(value) and value.get() or value) or default)
 end
 
 drawers = {
     ['rect'] = function(element)
         local color = unwrap(element.props.color)
         local alpha = unwrap(element.props.alpha, 1)
+
+        if (isMouseInPosition(
+            unwrap(element.props.x),
+            unwrap(element.props.y),
+            unwrap(element.props.width),
+            unwrap(element.props.height)
+        )) then
+            if (element.props.on and element.props.on.mouseIn) then
+                element.props.on.mouseIn({ target = element })
+            end
+        else
+            if (element.props.on and element.props.on.mouseOut) then
+                element.props.on.mouseOut({ target = element })
+            end
+        end
 
         dxDrawRectangle(
             unwrap(element.props.x),
@@ -51,4 +66,12 @@ end
 function rgba(r, g, b, a)
     a = a or 1
     return tocolor(r, g, b, a * 255)
+end
+
+function isUnderline(str)
+    return str:sub(1,1) == "_"
+end
+
+local function bind(t, k)
+    return function(...) return t[k](t, ...) end
 end

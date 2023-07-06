@@ -2,7 +2,6 @@ local screenWidth, screenHeight = guiGetScreenSize()
 
 local elements = {}
 
-
 local context = {}
 function signal(initialValue)
     local value = initialValue
@@ -79,7 +78,9 @@ function memo(callback)
         end
     end)
 
-    return cache.get
+    return {
+        get = cache.get
+    }
 end
 
 local function flushRender(els)
@@ -117,13 +118,52 @@ function h(tag, props, children)
     children = children or {}
     props.postGUI = props.postGUI or false
 
+    local newProps = {}
+    for k, v in pairs(props) do
+        if (type(v) == 'function') then
+            newProps[k] = memo(v)
+        else
+            newProps[k] = v
+        end
+    end
+
     local element = {
         tag = tag,
-        props = props,
+        props = newProps,
         children = children,
         parent = nil,
         events = props.on or {}
     }
+
+    local ref = props.ref
+    if (ref) then
+        ref.set({ addEventListener = function(event, callback)
+            element.events[event] = callback
+        end })
+    end
+
+    for k, v in pairs(element.events) do
+        if (isUnderline(k)) then
+            addEventHandler(k, root, function(...)
+                v({  target = element, ... })
+            end)
+        else
+            if (k == 'click') then
+                addEventHandler('onClientClick', root, function(...)
+                    if (not (isMouseInPosition(
+                        unwrap(element.props.x),
+                        unwrap(element.props.y),
+                        unwrap(element.props.width),
+                        unwrap(element.props.height)
+                    ))) then
+                        return
+                    end
+                    v({  target = element, ... })
+                end)
+            end
+        end
+    end
+
     return element
 end
 
@@ -214,19 +254,6 @@ function Rect(props, children)
 end
 
 function Button(props)
-    if (props.on and props.on.click) then
-        addEventHandler('onClientClick', root, function(button, state)
-            if (isMouseInPosition(props.x.get(), props.y, props.width, props.height)) then
-                props.on.click({
-                    button = button,
-                    state = state
-                })
-                props.x.set(props.x.get() + 20)
-                props.color.set({ 255, 0, 0, 1 })
-            end
-        end)
-    end
-
     return Rect(props)
 end
 

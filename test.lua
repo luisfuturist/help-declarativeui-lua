@@ -1,21 +1,51 @@
 local _root = getScreen()
 
+local function useHover(ref)
+    local isHovered = signal(false)
+
+    effect(function()
+        local element = ref.get()
+        if (element) then
+            element.addEventListener('mouseIn', function(e)
+                isHovered.set(true)
+            end)
+        
+            element.addEventListener('mouseOut', function(e)
+                isHovered.set(false)
+            end)
+        end
+    end)
+
+    return isHovered
+end
+
+local function MyButton()
+    local ref = signal(nil)
+    local isHovered = useHover(ref)
+
+    return Button({
+        x = signal(700),
+        y = 280,
+        width = 200,
+        height = 200,
+        color = function()
+            return isHovered.get() and { 255, 255, 0, 1 } or { 255, 255, 255, 1 }
+        end,
+        ref = ref,
+        on = {
+            click = function(e)
+                if (e[2] == 'down') then
+                    local props = e.target.props
+                    props.x.set(props.x.get() + 20)
+                end
+            end
+        }
+    })
+end
+
 local function component(...)
     return Fragment({
-        Button({
-            x = signal(200),
-            y = 20,
-            width = 60,
-            height = 60,
-            color = color,
-            on = {
-                click = function(e)
-                    if (e.state == 'down') then
-                        -- iprint('clicked')
-                    end
-                end
-            }
-        }),
+        MyButton(),
         -- Rect({
         --     x = 100,
         --     y = 10,
