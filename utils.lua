@@ -1,49 +1,5 @@
 local screenWidth, screenHeight = guiGetScreenSize()
 
-local function isReactive(value)
-    return type(value) == 'table' and type(value.get) == 'function'
-end
-
-function unwrap(value, default)
-    default = default or 0
-    return (value and (isReactive(value) and value.get() or value) or default)
-end
-
-drawers = {
-    ['rect'] = function(element)
-        local color = unwrap(element.props.color)
-        local alpha = unwrap(element.props.alpha, 1)
-
-        if (isMouseInPosition(
-            unwrap(element.props.x),
-            unwrap(element.props.y),
-            unwrap(element.props.width),
-            unwrap(element.props.height)
-        )) then
-            if (element.props.on and element.props.on.mouseIn) then
-                element.props.on.mouseIn({ target = element })
-            end
-        else
-            if (element.props.on and element.props.on.mouseOut) then
-                element.props.on.mouseOut({ target = element })
-            end
-        end
-
-        dxDrawRectangle(
-            unwrap(element.props.x),
-            unwrap(element.props.y),
-            unwrap(element.props.width),
-            unwrap(element.props.height),
-            rgba(
-                color[1],
-                color[2],
-                color[3],
-                color[4] or alpha
-            )
-        )
-    end
-}
-
 function isMouseInPosition(x, y, w, h)
     if (not isCursorShowing()) then return false end
     local cx, cy = getCursorPosition()
@@ -72,6 +28,15 @@ function isUnderline(str)
     return str:sub(1,1) == "_"
 end
 
-local function bind(t, k)
-    return function(...) return t[k](t, ...) end
+function dxDrawLinedRectangle(x, y, width, height, color, _width, postGUI )
+	_width = _width or 1
+	dxDrawLine ( x, y, x+width, y, color, _width, postGUI ) -- Top
+	dxDrawLine ( x, y, x, y+height, color, _width, postGUI )
+	dxDrawLine ( x, y+height, x+width, y+height, color, _width, postGUI ) -- Bottom
+	return dxDrawLine ( x+width, y, x+width, y+height, color, _width, postGUI ) -- Right
+end
+
+_dxDrawText = dxDrawText
+function dxDrawText(t, x, y, r, b, ...)
+    return _dxDrawText(t, x, y, r + x, b + y, ...)
 end

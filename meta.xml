@@ -1,6 +1,14 @@
 <meta>
+    <script src='events-parameters.lua' type='client' cache='false' />
+    <script src='reactivity.lua' type='client' cache='false' />
     <script src='utils.lua' type='client' cache='false' />
-    <script src='core.lua' type='client' cache='false' />
-    <script src='store.lua' type='client' cache='false' />
+    <script src='components.lua' type='client' cache='false' />
+    <script src='document.lua' type='client' cache='false' />
+    <script src='drawers.lua' type='client' cache='false' />
+    <script src='render.lua' type='client' cache='false' />
+
+    <!-- TESTS -->
     <script src='test.lua' type='client' cache='false' />
+
+    <file src='icon.png' />
 </meta>
