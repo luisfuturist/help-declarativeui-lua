@@ -1,0 +1,6 @@
+<meta>
+    <script src='utils.lua' type='client' cache='false' />
+    <script src='core.lua' type='client' cache='false' />
+    <script src='store.lua' type='client' cache='false' />
+    <script src='test.lua' type='client' cache='false' />
+</meta>
