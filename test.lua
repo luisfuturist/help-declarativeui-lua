@@ -34,10 +34,17 @@ local function MyButton()
         ref = ref,
         on = {}
     }, {
-        Text({
-            x = 10,
-            y = 10
-        }, 'Click me')
+        Rect({
+            x = 0,
+            y = 0,
+            width = '200%',
+            height = 200 * 2,
+            maxWidth = 200,
+            -- overflow = { 'hidden', 'hidden' },
+            color = { 255, 255, 0 },
+            -- trbl
+            inset = { 0, 0, 'auto', 'auto' }
+        })
     })
 end
 

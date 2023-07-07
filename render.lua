@@ -26,22 +26,21 @@ local function renderUI()
 end
 addEventHandler('onClientResourceStart', resourceRoot, renderUI)
 
-local function updateTree(parent, els)
-    if (not els) then return end
-
-    for _, element in ipairs(els) do
-        element.parent = parent
-        element.props.absX = element.props.x + parent.props.absX 
-        element.props.absY = element.props.y + parent.props.absY
-        if (element.children) then
-            for i = 1, #element.children do
-                local child = element.children[i]
-                child.parent = element
-                child.props.absX = child.props.x + element.props.absX
-                child.props.absY = child.props.y + element.props.absY
-                updateTree(element, child)
-            end
-        end
+local function updateTree(parent, children)
+    if (not children) then return end
+    if (type(children) == 'string') then return end
+    
+    for _, child in ipairs(children) do
+        local absW = parent.parent and parent.props.absW or (child.props.width or 0)
+        local absH = parent.parent and parent.props.absH or (child.props.height or 0)
+        local paddingR = parent.parent and parent.props.padding[2] or 0
+        local paddingB = parent.parent and parent.props.padding[3] or 0
+        child.parent = parent
+        child.props.absX = (child.props.x or 0) + (parent.parent and parent.props.absX or 0)
+        child.props.absY = (child.props.y or 0) + (parent.parent and parent.props.absY or 0)
+        child.props.absW = absW * toABS(child.props.width) + ((not isPercent(child.props.width)) and child.props.width or 0) - paddingR
+        child.props.absH = absH * toABS(child.props.height) + ((not isPercent(child.props.height)) and child.props.height or 0) - paddingB
+        updateTree(child, child.children)
     end
 end
 

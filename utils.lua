@@ -40,3 +40,21 @@ _dxDrawText = dxDrawText
 function dxDrawText(t, x, y, r, b, ...)
     return _dxDrawText(t, x, y, r + x, b + y, ...)
 end
+
+function toABS(str)
+    if (not (type(str) == 'string')) then return 0 end
+    local value = tonumber(str)
+    if (not value) then
+        value = select(3, str:find('([%d%.]+)%%'))
+        if (not value) then
+            return 0
+        end
+        return tonumber(value) / 100
+    end
+    return value
+end
+
+function isPercent(str)
+    if (not (type(str) == 'string')) then return false end
+    return str:find('([%d%.]+)%%') ~= nil
+end

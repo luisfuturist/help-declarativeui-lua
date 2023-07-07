@@ -5,7 +5,7 @@ local function normalizeProp(props, key, amount, defaultValue)
     if (not props[key]) then
         props[key] = {}
     end
-    if (type(value) == 'number') then
+    if (type(value) == 'number' or type(value) == 'string') then
         props[key] = {}
         for i = 1, amount do
             props[key][i] = value
@@ -25,6 +25,8 @@ function h(tag, props, children)
     props.postGUI = props.postGUI or false
     props.absX = 0
     props.absY = 0
+    props.absW = props.width
+    props.absH = props.height
 
     local newProps = {}
     for k, v in pairs(props) do
