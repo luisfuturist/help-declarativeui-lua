@@ -32,12 +32,12 @@ drawers = {
         local alpha = unwrap(element.props.alpha, 1)
         local x, y, w, h = getBox(element)
 
-        if (element.props.on and element.props.on.mouseIn) then
+        if (element.events and element.events.mouseIn) then
             if (isMouseInPosition(x, y, w, h)) then
-                element.props.on.mouseIn({ target = element })
+                element.events.mouseIn({ target = element })
             else
-                if (element.props.on and element.props.on.mouseOut) then
-                    element.props.on.mouseOut({ target = element })
+                if (element.events and element.events.mouseOut) then
+                    element.events.mouseOut({ target = element })
                 end
             end
         end

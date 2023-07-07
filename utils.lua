@@ -1,12 +1,3 @@
-local screenWidth, screenHeight = guiGetScreenSize()
-
-function isMouseInPosition(x, y, w, h)
-    if (not isCursorShowing()) then return false end
-    local cx, cy = getCursorPosition()
-    local mx, my = cx * screenWidth, cy * screenHeight
-    return ((mx >= x and mx <= x + w) and (my >= y and my <= y + h))
-end
-
 function CreateThread(callback)
     local thread = coroutine.create(callback)
     local function resume()

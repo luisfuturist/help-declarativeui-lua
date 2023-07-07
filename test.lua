@@ -31,16 +31,16 @@ local function MyButton()
             return isHovered.get() and { 255, 0, 0, } or { 0, 0, 0 }
         end,
         padding = 10,
-        ref = ref,
-        on = {}
+        ref = ref
     }, {
         Rect({
             x = 0,
             y = 0,
-            width = '200%',
-            height = 200 * 2,
+            width = '20%',
+            height = '20%',
             maxWidth = 200,
-            -- overflow = { 'hidden', 'hidden' },
+            maxHeight = 200,
+            overflow = 'hidden',
             color = { 255, 255, 0 },
             -- trbl
             inset = { 0, 0, 'auto', 'auto' }

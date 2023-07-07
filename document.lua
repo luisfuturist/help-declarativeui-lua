@@ -1,5 +1,7 @@
 elements = {}
 
+local screenWidth, screenHeight = guiGetScreenSize()
+
 local function normalizeProp(props, key, amount, defaultValue)
     local value = props[key] or {}
     if (not props[key]) then
@@ -19,7 +21,7 @@ end
 
 function h(tag, props, children)
     if (not tag) then error('Element tag is required', 2) end
-    if (not props) then error('Element props is required', 2) end
+    if (not props) then error('Element props is required', 2) end -- __DEV__
     
     children = children or {}
     props.postGUI = props.postGUI or false
@@ -124,3 +126,29 @@ end
 
 local screen = Screen({})
 elements[#elements + 1] = screen
+
+local mouse = {}
+
+function updateMouse()
+    mouse.state = isCursorShowing()
+    if (mouse.state) then
+        local cx, cy = getCursorPosition()
+        mouse.x, mouse.y = cx * screenWidth, cy * screenHeight
+    end
+end
+
+function isMouseInPosition(x, y, w, h)
+    local mx, my = mouse.x, mouse.y
+    return ((mx >= x and mx <= x + w) and (my >= y and my <= y + h))
+end
+
+local function updateUI()
+    CreateThread(function()
+        while (true) do
+            updateMouse()
+            flushRender()
+            coroutine.yield()
+        end
+    end)
+end
+addEventHandler('onClientResourceStart', resourceRoot, updateUI)
