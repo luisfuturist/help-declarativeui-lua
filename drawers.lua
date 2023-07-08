@@ -17,23 +17,17 @@ local function getBox(element)
     box.maxH = props.absMaxH
     box.w = math.max(math.min(props.absW, box.maxW), box.minW)
     box.h = math.max(math.min(props.absH, box.maxH), box.minH)    
-    box.x = props.x + parentProps.absX + p.l + m.l + inset.l - inset.r + (type(props.inset[2]) == 'number' and parentContent.w - box.w or 0)
-    box.y = props.y + parentProps.absY + p.t + m.t + inset.t - inset.b + (type(props.inset[3]) == 'number' and parentContent.h - box.h or 0)
-
+    
     if (props.overflow[1] == 'hidden') then
-        box.w = parentProps.absW - p.l
+        box.w = parentProps.absW - p.l - p.r
     end
     
     if (props.overflow[2] == 'hidden') then
-        box.h = parentProps.absH - p.t
+        box.h = parentProps.absH - p.t - p.b
     end
-    
-    -- local maxW = parent and parent.props.absW - parent.props.padding[2] - parent.props.padding[4] or props.width
-    -- local maxH = parent and parent.props.absH - parent.props.padding[1] - parent.props.padding[3] or props.height
-    -- local w = (props.overflow[1] == 'visible') and (props.absW - (props.absW > maxW and paddingR or 0)) or ((props.absW > maxW and maxW ~= nil) and maxW or props.absW)
-    -- local h = (props.overflow[2] == 'visible') and (props.absH - (props.absH > maxH and paddingB or 0)) or ((props.absH > maxH and maxH ~= nil) and maxH or props.absH)
 
-    -- overflow: visible, hidden, scroll
+    box.x = props.x + parentProps.absX + p.l + m.l + inset.l - inset.r + (type(props.inset[2]) == 'number' and parentContent.w - box.w or 0)
+    box.y = props.y + parentProps.absY + p.t + m.t + inset.t - inset.b + (type(props.inset[3]) == 'number' and parentContent.h - box.h or 0)
 
     return box.x, box.y, box.w, box.h
 end

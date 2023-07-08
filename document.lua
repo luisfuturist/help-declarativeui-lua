@@ -2,6 +2,25 @@ elements = {}
 
 local screenWidth, screenHeight = guiGetScreenSize()
 
+local function normalizeDirectionalProp(props, key, defaultValue)
+    local value = props[key] or {}
+    if (not props[key]) then
+        props[key] = {}
+    end
+    if (type(value) == 'number' or type(value) == 'string') then
+        props[key] = {}
+        props[key].t = value
+        props[key].r = value
+        props[key].b = value
+        props[key].l = value
+    else
+        props[key].t = value[1] or defaultValue
+        props[key].r = value[2] or defaultValue
+        props[key].b = value[3] or defaultValue
+        props[key].l = value[4] or defaultValue
+    end
+end
+
 local function normalizeProp(props, key, amount, defaultValue)
     local value = props[key] or {}
     if (not props[key]) then
@@ -43,10 +62,10 @@ function h(tag, props, children)
         end
     end
 
-    normalizeProp(newProps, 'padding', 4, 0)
+    normalizeDirectionalProp(newProps, 'padding', 0)
     normalizeProp(newProps, 'overflow', 2, 'visible')
     normalizeProp(newProps, 'inset', 4, 'auto')
-    normalizeProp(newProps, 'margin', 4, 0)
+    normalizeDirectionalProp(newProps, 'margin', 0)
 
     local element = {
         tag = tag,

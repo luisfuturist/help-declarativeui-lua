@@ -7,6 +7,17 @@ function flushRender(els)
             local tag = element.tag
             if (drawers[tag]) then
                 drawers[tag](element)
+
+                if (element.events and element.events.mouseIn) then
+                    local x, y, h, w = element.props.absX, element.props.absY, element.props.absH, element.props.absW
+                    if (isMouseInPosition(x, y, w, h)) then
+                        element.events.mouseIn({ target = element })
+                    else
+                        if (element.events and element.events.mouseOut) then
+                            element.events.mouseOut({ target = element })
+                        end
+                    end
+                end
             end
 
             if (element.children) then
@@ -20,12 +31,6 @@ local function updateTree(parent, children)
     if (not children) then return end
     if (type(children) == 'string') then return end
     
-    parent.props.padding = {
-        t = parent.props.padding[1] or 0,
-        r = parent.props.padding[2] or 0,
-        b = parent.props.padding[3] or 0,
-        l = parent.props.padding[4] or 0,
-    }
     local parentProps = parent.parent and parent.props or nil
 
     for _, child in ipairs(children) do
@@ -45,18 +50,6 @@ local function updateTree(parent, children)
         child.props.absMaxH = isPercent(childProps.maxHeight) and parentAbsH * normalizePercent(childProps.maxHeight) or childProps.maxHeight
         child.props.absMinW = isPercent(childProps.minWidth) and parentAbsW * normalizePercent(childProps.minWidth) or childProps.minWidth
         child.props.absMinH = isPercent(childProps.minHeight) and parentAbsH * normalizePercent(childProps.minHeight) or childProps.minHeight
-        child.props.padding =  {
-            t = childProps.padding[1] or 0,
-            r = childProps.padding[2] or 0,
-            b = childProps.padding[3] or 0,
-            l = childProps.padding[4] or 0
-        }
-        child.props.margin = {
-            t = childProps.margin[1] or 0,
-            r = childProps.margin[2] or 0,
-            b = childProps.margin[3] or 0,
-            l = childProps.margin[4] or 0
-        }
 
         updateTree(child, child.children)
     end
