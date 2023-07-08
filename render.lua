@@ -7,17 +7,6 @@ function flushRender(els)
             local tag = element.tag
             if (drawers[tag]) then
                 drawers[tag](element)
-
-                if (element.events and element.events.mouseIn) then
-                    local x, y, h, w = element.props.absX, element.props.absY, element.props.absH, element.props.absW
-                    if (isMouseInPosition(x, y, w, h)) then
-                        element.events.mouseIn({ target = element })
-                    else
-                        if (element.events and element.events.mouseOut) then
-                            element.events.mouseOut({ target = element })
-                        end
-                    end
-                end
             end
 
             if (element.children) then
@@ -31,25 +20,44 @@ local function updateTree(parent, children)
     if (not children) then return end
     if (type(children) == 'string') then return end
     
-    local parentProps = parent.parent and parent.props or nil
+    -- local parent = parent.parent and parent.props or nil
 
     for _, child in ipairs(children) do
-        local childProps = child.props
-
-        local parentAbsW = parentProps and parentProps.absW or (childProps.width or 0)
-        local parentAbsH = parentProps and parentProps.absH or (childProps.height or 0)
-        local paddingR = parentProps and parentProps.padding[2] or 0
-        local paddingB = parentProps and parentProps.padding[3] or 0
-
         child.parent = parent
-        child.props.absX = (childProps.x or 0) + (parentProps and parentProps.absX or 0)
-        child.props.absY = (childProps.y or 0) + (parentProps and parentProps.absY or 0)
-        child.props.absW = parentAbsW * normalizePercent(childProps.width, 0) + ((not isPercent(childProps.width)) and childProps.width or 0) - paddingR
-        child.props.absH = parentAbsH * normalizePercent(childProps.height, 0) + ((not isPercent(childProps.height)) and childProps.height or 0) - paddingB
-        child.props.absMaxW = isPercent(childProps.maxWidth) and parentAbsW * normalizePercent(childProps.maxWidth) or childProps.maxWidth
-        child.props.absMaxH = isPercent(childProps.maxHeight) and parentAbsH * normalizePercent(childProps.maxHeight) or childProps.maxHeight
-        child.props.absMinW = isPercent(childProps.minWidth) and parentAbsW * normalizePercent(childProps.minWidth) or childProps.minWidth
-        child.props.absMinH = isPercent(childProps.minHeight) and parentAbsH * normalizePercent(childProps.minHeight) or childProps.minHeight
+        
+        local childProps = child.props
+        local parentAbsW = parent and parent.absW or (childProps.width or 0)
+        local parentAbsH = parent and parent.absH or (childProps.height or 0)
+        local padding = parent and normalizeProp(parent.props.padding, 4, 0) or { }
+        local gap = parent and normalizeProp(parent.props.gap, 2, 0) or { 0, 0 }
+        local paddingR = padding[2] or 0
+        local paddingB = padding[3] or 0
+
+        local x = wrap(childProps._x)
+        local parentX = wrap(parent and parent.absX or 0)
+        effect(function()
+            child.absX = x.get() + parentX.get()
+        end)
+
+        local y = wrap(childProps._y)
+        local parentY = wrap((parent and parent.absY or 0))
+        effect(function()
+            child.absY = y.get() + parentY.get()
+        end)
+
+        -- child.props.absY = (unwrap(childProps.y) or 0) + (parent and parent.absY or 0)
+        child.absW = parentAbsW * normalizePercent(childProps.width, 0) + ((not isPercent(childProps.width)) and childProps.width or 0) - paddingR
+        child.absH = parentAbsH * normalizePercent(childProps.height, 0) + ((not isPercent(childProps.height)) and childProps.height or 0) - paddingB
+        child.absMaxW = isPercent(childProps.maxWidth) and parentAbsW * normalizePercent(childProps.maxWidth) or childProps.maxWidth
+        child.absMaxH = isPercent(childProps.maxHeight) and parentAbsH * normalizePercent(childProps.maxHeight) or childProps.maxHeight
+        child.absMinW = isPercent(childProps.minWidth) and parentAbsW * normalizePercent(childProps.minWidth) or childProps.minWidth
+        child.absMinH = isPercent(childProps.minHeight) and parentAbsH * normalizePercent(childProps.minHeight) or childProps.minHeight
+
+        child.blockBoxX = parent.blockBoxX
+        parent.blockBoxX = parent.blockBoxX + child.absW + gap[1]
+        child.blockBoxY = parent.blockBoxY
+        parent.blockBoxY = parent.blockBoxY + child.absH + gap[2]
+        parent.highestChildHeight = math.max(parent.highestChildHeight, child.absH)
 
         updateTree(child, child.children)
     end

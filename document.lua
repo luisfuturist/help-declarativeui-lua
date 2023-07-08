@@ -2,40 +2,76 @@ elements = {}
 
 local screenWidth, screenHeight = guiGetScreenSize()
 
-local function normalizeDirectionalProp(props, key, defaultValue)
-    local value = props[key] or {}
-    if (not props[key]) then
-        props[key] = {}
-    end
+-- local function normalizeDirectionalProp(props, key, defaultValue)
+--     local value = props[key] or {}
+--     if (not props[key]) then
+--         props[key] = {}
+--     end
+--     if (type(value) == 'number' or type(value) == 'string') then
+--         props[key] = {}
+--         props[key].t = value
+--         props[key].r = value
+--         props[key].b = value
+--         props[key].l = value
+--     else
+--         props[key].t = value[1] or defaultValue
+--         props[key].r = value[2] or defaultValue
+--         props[key].b = value[3] or defaultValue
+--         props[key].l = value[4] or defaultValue
+--     end
+-- end
+
+-- local function normalizeProp(props, key, amount, defaultValue)
+--     local value = props[key] or {}
+--     if (not props[key]) then
+--         props[key] = {}
+--     end
+--     if (type(value) == 'number' or type(value) == 'string') then
+--         props[key] = {}
+--         for i = 1, amount do
+--             props[key][i] = value
+--         end
+--     else
+--         for i = 1, amount do
+--             props[key][i] = value[i] or defaultValue
+--         end
+--     end
+-- end
+
+function normalizeProp(value, amount, defaultValue)
+    value = value or {}
+    
     if (type(value) == 'number' or type(value) == 'string') then
-        props[key] = {}
-        props[key].t = value
-        props[key].r = value
-        props[key].b = value
-        props[key].l = value
+        local newValue = {}
+        for i = 1, amount do
+            newValue[i] = value
+        end
+        return newValue
     else
-        props[key].t = value[1] or defaultValue
-        props[key].r = value[2] or defaultValue
-        props[key].b = value[3] or defaultValue
-        props[key].l = value[4] or defaultValue
+        for i = 1, amount do
+            value[i] = value[i] or defaultValue
+        end
     end
+    return value
 end
 
-local function normalizeProp(props, key, amount, defaultValue)
-    local value = props[key] or {}
-    if (not props[key]) then
-        props[key] = {}
-    end
+function normalizeDirectionalProp(value, defaultValue)
+    value = value or {}
+    
     if (type(value) == 'number' or type(value) == 'string') then
-        props[key] = {}
-        for i = 1, amount do
-            props[key][i] = value
-        end
+        local newValue = {}
+        newValue.t = value
+        newValue.r = value
+        newValue.b = value
+        newValue.l = value
+        return newValue
     else
-        for i = 1, amount do
-            props[key][i] = value[i] or defaultValue
-        end
+        value.t = value[1] or defaultValue
+        value.r = value[2] or defaultValue
+        value.b = value[3] or defaultValue
+        value.l = value[4] or defaultValue
     end
+    return value
 end
 
 function h(tag, props, children)
@@ -44,35 +80,57 @@ function h(tag, props, children)
     
     children = children or {}
     props.postGUI = props.postGUI or false
-    props.absX = 0
-    props.absY = 0
-    props.absW = props.width
-    props.absH = props.height
+    props.x = props.x or 0
+    props.y = props.y or 0
     props.minWidth = props.minWidth or 0
     props.minHeight = props.minHeight or 0
-    props.maxWidth = props.maxWidth or props.absW
-    props.maxHeight = props.maxHeight or props.absH
+    props.maxWidth = props.maxWidth or props.width
+    props.maxHeight = props.maxHeight or props.height
+    props.display = props.display or 'static'
+    props.direction = props.direction or 'column'
+    props.wrap = props.wrap or 'nowrap'
 
     local newProps = {}
     for k, v in pairs(props) do
-        if (type(v) == 'function') then
-            newProps[k] = memo(v)
+        local value = (type(v) == 'function') and memo(v) or v
+        if (isReactive(value)) then
+            newProps[k] = value.peek()
+            newProps['_' .. k] = value
+            effect(function()
+                newProps[k] = value.get()
+            end)
         else
-            newProps[k] = v
+            newProps[k] = value
         end
     end
 
-    normalizeDirectionalProp(newProps, 'padding', 0)
-    normalizeProp(newProps, 'overflow', 2, 'visible')
-    normalizeProp(newProps, 'inset', 4, 'auto')
-    normalizeDirectionalProp(newProps, 'margin', 0)
+    if (type(children) == 'function') then
+        children = memo(children)
+    end
+
+    -- normalizeDirectionalProp(newProps, 'padding', 0)
+    -- normalizeProp(newProps, 'overflow', 2, 'visible')
+    -- normalizeProp(newProps, 'inset', 4, 'auto')
+    -- normalizeDirectionalProp(newProps, 'margin', 0)
+    -- normalizeProp(newProps, 'gap', 2, 0)
 
     local element = {
         tag = tag,
         props = newProps,
         children = children,
         parent = nil,
-        events = props.on or {}
+        events = props.on or {},
+        blockBoxX = 0,
+        blockBoxY = 0,
+        highestChildHeight = 0,
+        absX = 0,
+        absY = 0,
+        absW = props.width,
+        absH = props.height,
+        absMaxW = props.maxWidth or 0,
+        absMaxH = props.maxHeight or 0,
+        absMinW = props.minWidth or 0,
+        absMinH = props.minHeight or 0,
     }
 
     local ref = props.ref

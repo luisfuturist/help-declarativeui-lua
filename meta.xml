@@ -6,6 +6,7 @@
     <script src='document.lua' type='client' cache='false' />
     <script src='drawers.lua' type='client' cache='false' />
     <script src='render.lua' type='client' cache='false' />
+    <script src='hooks.lua' type='client' cache='false' />
 
     <!-- TESTS -->
     <script src='test.lua' type='client' cache='false' />

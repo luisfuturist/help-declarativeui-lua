@@ -6,14 +6,12 @@ function Screen(children)
         y = 0,
         width = screenWidth,
         height = screenHeight,
-        path = ''
     }, children)
 end
 
 function Rect(props, children)
     props.color = props.color or { 255, 255, 255, 1 }
     props.border = props.border or 1
-
     return h('rect', props, children)
 end
 
@@ -31,7 +29,7 @@ function Text(props, children)
     props.fRotationCenterX = props.fRotationCenterX or 0
     props.fRotationCenterY = props.fRotationCenterY or 0
 
-    local textWidth, textHeight = dxGetTextSize(children, 0, 1, props.font, props.wordBreak, props.colorCoded)
+    local textWidth, textHeight = dxGetTextSize(normalizeSignal(children), 0, 1, props.font, props.wordBreak, props.colorCoded)
     props.width = props.width or textWidth
     props.height = props.height or textHeight
 

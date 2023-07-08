@@ -59,3 +59,24 @@ function normalizeInset(_inset)
         l = type(inset[4]) == 'string' and 0 or inset[4] or 0
     }
 end
+
+function normalizeSignal(signal)
+    if (type(signal) == 'function')  then
+        return unwrap(memo(signal))
+    end
+    return unwrap(signal)
+end
+
+function useState(defaultState)
+    local state = defaultState
+    
+    local function get()
+        return state
+    end
+
+    local function set(newState)
+        state = newState
+    end
+
+    return get, set
+end

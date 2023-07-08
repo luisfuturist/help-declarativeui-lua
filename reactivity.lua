@@ -37,10 +37,15 @@ function signal(initialValue)
         end
     end
 
+    local function peek()
+        return value
+    end
+
     return {
         unsub = unsub,
         set = set,
         get = get,
+        peek = peek
     }
 end
 
@@ -75,7 +80,8 @@ function memo(callback)
     end)
 
     return {
-        get = cache.get
+        get = cache.get,
+        peek = cache.peek
     }
 end
 
@@ -85,5 +91,9 @@ end
 
 function unwrap(value, default)
     default = default or 0
-    return (value and (isReactive(value) and value.get() or value) or default)
+    return (value and (isReactive(value) and value.peek() or value) or default)
+end
+
+function wrap(value)
+    return isReactive(value) and value or signal(value)
 end
