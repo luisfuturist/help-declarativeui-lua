@@ -32,8 +32,8 @@ function dxDrawText(t, x, y, r, b, ...)
     return _dxDrawText(t, x, y, r + x, b + y, ...)
 end
 
-function toABS(str)
-    if (not (type(str) == 'string')) then return 0 end
+function normalizePercent(str, defaultValue)
+    if (not (type(str) == 'string')) then return (not defaultValue) and str or defaultValue end
     local value = tonumber(str)
     if (not value) then
         value = select(3, str:find('([%d%.]+)%%'))
@@ -48,4 +48,14 @@ end
 function isPercent(str)
     if (not (type(str) == 'string')) then return false end
     return str:find('([%d%.]+)%%') ~= nil
+end
+
+function normalizeInset(_inset)
+    local inset = { _inset[1], _inset[2], _inset[3], _inset[4] }
+    return {
+        t = type(inset[1]) == 'string' and 0 or inset[1] or 0,
+        r = type(inset[2]) == 'string' and 0 or inset[2] or 0,
+        b = type(inset[3]) == 'string' and 0 or inset[3] or 0,
+        l = type(inset[4]) == 'string' and 0 or inset[4] or 0
+    }
 end

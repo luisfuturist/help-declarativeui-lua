@@ -1,29 +1,41 @@
-local function normalizeInset(_inset)
-    local inset = { _inset[1], _inset[2], _inset[3], _inset[4] }
-    inset[1] = type(_inset[1]) == 'string' and 0 or _inset[1]
-    inset[2] = type(_inset[2]) == 'string' and 0 or _inset[2]
-    inset[3] = type(_inset[3]) == 'string' and 0 or _inset[3]
-    inset[4] = type(_inset[4]) == 'string' and 0 or _inset[4]
-    return inset
-end
-
 local function getBox(element)
     local parent = element.parent
     local props = element.props
+    local parentProps = parent and parent.props or nil
     
-    local paddingR = parent and parent.props.padding[2] or 0
-    local paddingB = parent and parent.props.padding[3] or 0
-    local x = parent and props.absX + parent.props.padding[4] or props.x
-    local y = parent and props.absY + parent.props.padding[1] or props.y
-    local maxW = parent and parent.props.absW - parent.props.padding[2] - parent.props.padding[4] or props.width
-    local maxH = parent and parent.props.absH - parent.props.padding[1] - parent.props.padding[3] or props.height
-    local w = (props.overflow[1] == 'visible') and (props.absW - (props.absW > maxW and paddingR or 0)) or ((props.absW > maxW and maxW ~= nil) and maxW or props.absW)
-    local h = (props.overflow[2] == 'visible') and (props.absH - (props.absH > maxH and paddingB or 0)) or ((props.absH > maxH and maxH ~= nil) and maxH or props.absH)
-    local inset_ = normalizeInset(props.inset)
-    local newX = x + inset_[4] + (-inset_[2] + (type(props.inset[2]) ~= 'string' and maxW - w or 0))
-    local newY = y + inset_[1] + (-inset_[3] + (type(props.inset[3]) ~= 'string' and maxH - h or 0))
+    local m = props.margin
+    local p = parentProps.padding
+    local inset = normalizeInset(props.inset)
+    local parentContent = {
+        w = (parent and parentProps.absW - p.l - p.r or 0),
+        h = (parent and parentProps.absH - p.t - p.b or 0),
+    }
+    local box = {}
+    box.minW = props.absMinW
+    box.minH = props.absMinH
+    box.maxW = props.absMaxW
+    box.maxH = props.absMaxH
+    box.w = math.max(math.min(props.absW, box.maxW), box.minW)
+    box.h = math.max(math.min(props.absH, box.maxH), box.minH)    
+    box.x = props.x + parentProps.absX + p.l + m.l + inset.l - inset.r + (type(props.inset[2]) == 'number' and parentContent.w - box.w or 0)
+    box.y = props.y + parentProps.absY + p.t + m.t + inset.t - inset.b + (type(props.inset[3]) == 'number' and parentContent.h - box.h or 0)
 
-    return newX, newY, w, h
+    if (props.overflow[1] == 'hidden') then
+        box.w = parentProps.absW - p.l
+    end
+    
+    if (props.overflow[2] == 'hidden') then
+        box.h = parentProps.absH - p.t
+    end
+    
+    -- local maxW = parent and parent.props.absW - parent.props.padding[2] - parent.props.padding[4] or props.width
+    -- local maxH = parent and parent.props.absH - parent.props.padding[1] - parent.props.padding[3] or props.height
+    -- local w = (props.overflow[1] == 'visible') and (props.absW - (props.absW > maxW and paddingR or 0)) or ((props.absW > maxW and maxW ~= nil) and maxW or props.absW)
+    -- local h = (props.overflow[2] == 'visible') and (props.absH - (props.absH > maxH and paddingB or 0)) or ((props.absH > maxH and maxH ~= nil) and maxH or props.absH)
+
+    -- overflow: visible, hidden, scroll
+
+    return box.x, box.y, box.w, box.h
 end
 
 drawers = {

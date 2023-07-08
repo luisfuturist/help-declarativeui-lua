@@ -29,6 +29,10 @@ function h(tag, props, children)
     props.absY = 0
     props.absW = props.width
     props.absH = props.height
+    props.minWidth = props.minWidth or 0
+    props.minHeight = props.minHeight or 0
+    props.maxWidth = props.maxWidth or props.absW
+    props.maxHeight = props.maxHeight or props.absH
 
     local newProps = {}
     for k, v in pairs(props) do
@@ -42,6 +46,7 @@ function h(tag, props, children)
     normalizeProp(newProps, 'padding', 4, 0)
     normalizeProp(newProps, 'overflow', 2, 'visible')
     normalizeProp(newProps, 'inset', 4, 'auto')
+    normalizeProp(newProps, 'margin', 4, 0)
 
     local element = {
         tag = tag,
@@ -138,6 +143,7 @@ function updateMouse()
 end
 
 function isMouseInPosition(x, y, w, h)
+    if (not mouse.state) then return end
     local mx, my = mouse.x, mouse.y
     return ((mx >= x and mx <= x + w) and (my >= y and my <= y + h))
 end
