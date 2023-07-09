@@ -31,15 +31,15 @@ local function getBox(element)
         box.h = parentElement.absH - p.t - p.b
     end
 
-    box.x = props.x + parentElement.absX + p.l + m.l + inset.l - inset.r + (type(propsInset[2]) == 'number' and parentContent.w - box.w or 0)
-    box.y = props.y + parentElement.absY + p.t + m.t + inset.t - inset.b + (type(propsInset[3]) == 'number' and parentContent.h - box.h or 0)
+    box.x = parentElement.absX + p.l + m.l + inset.l - inset.r + (type(propsInset[2]) == 'number' and parentContent.w - box.w - p.l - p.r or 0)
+    box.y = parentElement.absY + p.t + m.t + inset.t - inset.b + (type(propsInset[3]) == 'number' and parentContent.h - box.h - p.t - p.b or 0)
 
     if (display == 'block') then
         if (parentProps.wrap == 'nowrap') then
             if (parentProps.direction == 'column') then
-                box.y = parentElement.absY + element.blockBoxY
+                box.y = box.y + element.blockBoxY
             elseif (parentProps.direction == 'row') then
-                box.x = parentElement.absX + element.blockBoxX
+                box.x = box.x + element.blockBoxX
             end
         elseif (parentProps.wrap == 'wrap') then
             if (parentProps.direction == 'row') then
@@ -50,6 +50,9 @@ local function getBox(element)
                 end
             end
         end
+    else
+        box.x = box.x + props.x
+        box.y = box.y + props.y
     end
 
     return box.x, box.y, box.w, box.h
