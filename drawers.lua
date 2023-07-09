@@ -10,19 +10,18 @@ local function getBox(element)
     local propsInset = normalizeProp(props.inset, 4, 'auto')
     local inset = normalizeInset(propsInset)
     local parentContent = {
-        w = (parent and parent.absW - p.l - p.r or 0),
-        h = (parent and parent.absH - p.t - p.b or 0),
+        w = (parent and parent.absW or 0),
+        h = (parent and parent.absH or 0),
     }
     local box = {
+        w = element.absW,
+        h = element.absH,
         minW = element.absMinW,
         minH = element.absMinH,
         maxW = element.absMaxW,
         maxH = element.absMaxH,
     }
 
-    box.w = math.max(math.min(element.absW, box.maxW), box.minW)
-    box.h = math.max(math.min(element.absH, box.maxH), box.minH)    
-    
     local overflow = normalizeDirectionalProp(props.overflow, 2, 'visible')
     if (overflow[1] == 'hidden') then
         box.w = parentElement.absW - p.l - p.r
@@ -46,7 +45,6 @@ local function getBox(element)
             if (parentProps.direction == 'row') then
                 if (parentElement.absX + element.blockBoxX >= parentElement.absX + parentContent.w) then
                     box.y = box.y + parent.highestChildHeight
-                    -- box.x = parentElement.absX
                 else
                     box.x = parentElement.absX + element.blockBoxX
                 end

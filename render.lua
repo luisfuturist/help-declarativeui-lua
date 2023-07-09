@@ -39,10 +39,8 @@ function updateNode(parent, child)
     local childProps = child.props
     local parentAbsW = parent and parent.absW or (childProps.width or 0)
     local parentAbsH = parent and parent.absH or (childProps.height or 0)
-    local padding = parent and normalizeProp(parent.props.padding, 4, 0) or { }
     local gap = parent and normalizeProp(parent.props.gap, 2, 0) or { 0, 0 }
-    local paddingR = padding[2] or 0
-    local paddingB = padding[3] or 0
+    local p = normalizeDirectionalProp(parent.props.padding, 0)
 
     local x = wrap(childProps._x)
     local parentX = wrap(parent and parent.absX or 0)
@@ -56,12 +54,14 @@ function updateNode(parent, child)
         child.absY = y.get() + parentY.get()
     end)
 
-    child.absW = parentAbsW * normalizePercent(childProps.width, 0) + ((not isPercent(childProps.width)) and childProps.width or 0) - paddingR
-    child.absH = parentAbsH * normalizePercent(childProps.height, 0) + ((not isPercent(childProps.height)) and childProps.height or 0) - paddingB
-    child.absMaxW = isPercent(childProps.maxWidth) and parentAbsW * normalizePercent(childProps.maxWidth) or childProps.maxWidth
-    child.absMaxH = isPercent(childProps.maxHeight) and parentAbsH * normalizePercent(childProps.maxHeight) or childProps.maxHeight
-    child.absMinW = isPercent(childProps.minWidth) and parentAbsW * normalizePercent(childProps.minWidth) or childProps.minWidth
-    child.absMinH = isPercent(childProps.minHeight) and parentAbsH * normalizePercent(childProps.minHeight) or childProps.minHeight
+    child.absW = (parentAbsW * normalizePercent(childProps.width, 0)) + ((not isPercent(childProps.width)) and childProps.width or 0)
+    child.absH = (parentAbsH * normalizePercent(childProps.height, 0)) + ((not isPercent(childProps.height)) and childProps.height or 0)
+    child.absMaxW = isPercent(childProps.maxWidth) and (parentAbsW * normalizePercent(childProps.maxWidth)) or childProps.maxWidth
+    child.absMaxH = isPercent(childProps.maxHeight) and (parentAbsH * normalizePercent(childProps.maxHeight)) or childProps.maxHeight
+    child.absMinW = isPercent(childProps.minWidth) and (parentAbsW * normalizePercent(childProps.minWidth)) or childProps.minWidth
+    child.absMinH = isPercent(childProps.minHeight) and (parentAbsH * normalizePercent(childProps.minHeight)) or childProps.minHeight
+    child.absW = math.min(child.absW, parentAbsW - p.l - p.r)
+    child.absH = math.min(child.absH, parentAbsH - p.t - p.b)
 
     child.blockBoxX = parent.blockBoxX
     parent.blockBoxX = parent.blockBoxX + child.absW + gap[1]
@@ -76,6 +76,16 @@ function updateTree(parent, children)
     if (not children) then return end
     if (type(children) == 'string') then return end
     
+    local p = normalizeDirectionalProp(parent.props.padding, 0)
+    parent.absW = parent.absW + p.l + p.r
+    parent.absH = parent.absH + p.t + p.b
+    parent.absMaxW = parent.absMaxW + p.l + p.r
+    parent.absMaxH = parent.absMaxH + p.t + p.b
+    parent.absMinW = parent.absMinW + p.l + p.r
+    parent.absMinH = parent.absMinH + p.t + p.b
+    parent.absW = math.max(math.min(parent.absW, parent.absMaxW), parent.absMinW)
+    parent.absH = math.max(math.min(parent.absH, parent.absMaxH), parent.absMinH)
+
     for _, child in ipairs(children) do
         if (type(child) == 'table') then
             updateNode(parent, child)
