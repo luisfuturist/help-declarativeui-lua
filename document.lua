@@ -2,78 +2,6 @@ elements = {}
 
 local screenWidth, screenHeight = guiGetScreenSize()
 
--- local function normalizeDirectionalProp(props, key, defaultValue)
---     local value = props[key] or {}
---     if (not props[key]) then
---         props[key] = {}
---     end
---     if (type(value) == 'number' or type(value) == 'string') then
---         props[key] = {}
---         props[key].t = value
---         props[key].r = value
---         props[key].b = value
---         props[key].l = value
---     else
---         props[key].t = value[1] or defaultValue
---         props[key].r = value[2] or defaultValue
---         props[key].b = value[3] or defaultValue
---         props[key].l = value[4] or defaultValue
---     end
--- end
-
--- local function normalizeProp(props, key, amount, defaultValue)
---     local value = props[key] or {}
---     if (not props[key]) then
---         props[key] = {}
---     end
---     if (type(value) == 'number' or type(value) == 'string') then
---         props[key] = {}
---         for i = 1, amount do
---             props[key][i] = value
---         end
---     else
---         for i = 1, amount do
---             props[key][i] = value[i] or defaultValue
---         end
---     end
--- end
-
-function normalizeProp(value, amount, defaultValue)
-    value = value or {}
-    
-    if (type(value) == 'number' or type(value) == 'string') then
-        local newValue = {}
-        for i = 1, amount do
-            newValue[i] = value
-        end
-        return newValue
-    else
-        for i = 1, amount do
-            value[i] = value[i] or defaultValue
-        end
-    end
-    return value
-end
-
-function normalizeDirectionalProp(value, defaultValue)
-    value = value or {}
-    
-    if (type(value) == 'number' or type(value) == 'string') then
-        local newValue = {}
-        newValue.t = value
-        newValue.r = value
-        newValue.b = value
-        newValue.l = value
-        return newValue
-    else
-        value.t = value[1] or defaultValue
-        value.r = value[2] or defaultValue
-        value.b = value[3] or defaultValue
-        value.l = value[4] or defaultValue
-    end
-    return value
-end
-
 function h(tag, props, children)
     if (not tag) then error('Element tag is required', 2) end
     if (not props) then error('Element props is required', 2) end -- __DEV__
@@ -101,18 +29,9 @@ function h(tag, props, children)
             end)
         else
             newProps[k] = value
+            newProps['_' .. k] = value
         end
     end
-
-    if (type(children) == 'function') then
-        children = memo(children)
-    end
-
-    -- normalizeDirectionalProp(newProps, 'padding', 0)
-    -- normalizeProp(newProps, 'overflow', 2, 'visible')
-    -- normalizeProp(newProps, 'inset', 4, 'auto')
-    -- normalizeDirectionalProp(newProps, 'margin', 0)
-    -- normalizeProp(newProps, 'gap', 2, 0)
 
     local element = {
         tag = tag,
@@ -132,38 +51,58 @@ function h(tag, props, children)
         absMinW = props.minWidth or 0,
         absMinH = props.minHeight or 0,
     }
-
-    local ref = props.ref
-    if (ref) then
-        ref.set({ addEventListener = function(event, callback)
-            element.events[event] = callback
-        end })
-    end
-
-    for k, v in pairs(element.events) do
-        if (isUnderline(k)) then
-            addEventHandler(k, root, function(...)
-                local data = eventsParameters[k:gsub('_', '')](...)
-                v({  target = element, data = data })
-            end)
-        else
-            if (k == 'click') then
-                addEventHandler('onClientClick', root, function(...)
-                    if (not (isMouseInPosition(
-                        unwrap(element.props.x),
-                        unwrap(element.props.y),
-                        unwrap(element.props.width),
-                        unwrap(element.props.height)
-                    ))) then
-                        return
-                    end
-                    v({  target = element, data = eventsParameters['onClientClick'](...) })
+    
+    if (type(children) == 'function') then
+        local cMemo = memo(children)
+        effect(function()
+            local c = { cMemo.get() }
+            updateTree(element, c)
+            element.children = c
+        end)
+    elseif (type(children) == 'table') then
+        for i = 1, #children do
+            local child = children[i]
+            if (type(child) == 'function') then
+                local cMemo = memo(child)
+                effect(function()
+                    local c = cMemo.get()
+                    updateNode(element, c)
+                    element.children[i] = c
                 end)
             end
         end
     end
 
+    local addEventListener = function(event, callback)
+        element.events[event] = callback
+    end
+
+    local ref = props.ref
+    if (ref) then
+        ref.set({ addEventListener })
+    end
+    
+    for k, v in pairs(element.events) do
+        if (isUnderline(k)) then
+            addEventHandler(k, root, function(...)
+                local data = eventParameters[k:gsub('_', '')](...)
+                v({  target = element, data = data })
+            end)
+        else
+            if (eventHandlers[k]) then
+                eventHandlers[k](element, v, ref)
+            end
+        end
+    end
+
+    if (element.events.created) then
+        eventHandlers.created(element, element.events.created)
+    end
     return element
+end
+
+function lazy(elementGetter)
+    return elementGetter
 end
 
 function getElementByKey(key, value, els)
@@ -229,7 +168,7 @@ local function updateUI()
     CreateThread(function()
         while (true) do
             updateMouse()
-            flushRender()
+            update()
             coroutine.yield()
         end
     end)

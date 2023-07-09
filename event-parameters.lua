@@ -1,4 +1,4 @@
-eventsParameters =  {
+eventParameters =  {
     ['onClientClick'] = function(...)
         local parameters = {...}
         return {

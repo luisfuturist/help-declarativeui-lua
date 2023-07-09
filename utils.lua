@@ -67,16 +67,38 @@ function normalizeSignal(signal)
     return unwrap(signal)
 end
 
-function useState(defaultState)
-    local state = defaultState
+function normalizeProp(value, amount, defaultValue)
+    value = value or {}
     
-    local function get()
-        return state
+    if (type(value) == 'number' or type(value) == 'string') then
+        local newValue = {}
+        for i = 1, amount do
+            newValue[i] = value
+        end
+        return newValue
+    else
+        for i = 1, amount do
+            value[i] = value[i] or defaultValue
+        end
     end
+    return value
+end
 
-    local function set(newState)
-        state = newState
+function normalizeDirectionalProp(value, defaultValue)
+    value = value or {}
+    
+    if (type(value) == 'number' or type(value) == 'string') then
+        local newValue = {}
+        newValue.t = value
+        newValue.r = value
+        newValue.b = value
+        newValue.l = value
+        return newValue
+    else
+        value.t = value[1] or defaultValue
+        value.r = value[2] or defaultValue
+        value.b = value[3] or defaultValue
+        value.l = value[4] or defaultValue
     end
-
-    return get, set
+    return value
 end

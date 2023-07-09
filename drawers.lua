@@ -46,6 +46,7 @@ local function getBox(element)
             if (parentProps.direction == 'row') then
                 if (parentElement.absX + element.blockBoxX >= parentElement.absX + parentContent.w) then
                     box.y = box.y + parent.highestChildHeight
+                    -- box.x = parentElement.absX
                 else
                     box.x = parentElement.absX + element.blockBoxX
                 end
@@ -62,16 +63,6 @@ drawers = {
         local color = element.props.color
         local opacity = element.props.opacity or 1
         local alpha = color[4] and color[4] * opacity or opacity
-
-        if (element.events and element.events.mouseIn) then
-            if (isMouseInPosition(x, y, w, h)) then
-                element.events.mouseIn({ target = element })
-            else
-                if (element.events and element.events.mouseOut) then
-                    element.events.mouseOut({ target = element })
-                end
-            end
-        end
 
         dxDrawRectangle(
             x, y, w, h,
@@ -90,7 +81,7 @@ drawers = {
         local alpha = color[4] and color[4] * opacity or opacity
 
         dxDrawText(
-            unwrap(element.children),
+            element.children[1],
             x, y, w, h,
             rgba(
                 color[1],
