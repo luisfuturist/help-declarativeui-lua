@@ -27,15 +27,6 @@ eventHandlers = {
         end)
     end,
 
-    hover = function(element, callback)
-        element.events['mouseIn'] = function()
-            callback({ target = element, data = { state = 'in' } })
-        end
-        element.events['mouseOut'] = function()
-            callback({ target = element, data = { state = 'out' } })
-        end
-    end,
-
     created = function(element, callback)
         callback({ target = element })
     end,

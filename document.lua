@@ -82,6 +82,16 @@ function h(tag, props, children)
         ref.set({ addEventListener })
     end
     
+    if (element.events.hover) then
+        local callback = element.events.hover
+        element.events.mouseIn = function()
+            callback({ target = element, data = { state = 'in' } })
+        end
+        element.events.mouseOut = function()
+            callback({ target = element, data = { state = 'out' } })
+        end
+    end
+
     for k, v in pairs(element.events) do
         if (isUnderline(k)) then
             addEventHandler(k, root, function(...)
