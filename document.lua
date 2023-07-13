@@ -2,56 +2,23 @@ elements = {}
 
 local screenWidth, screenHeight = guiGetScreenSize()
 
-function h(tag, props, children)
-    if (not tag) then error('Element tag is required', 2) end
-    if (not props) then error('Element props is required', 2) end -- __DEV__
-    
-    children = children or {}
-    props.postGUI = props.postGUI or false
-    props.x = props.x or 0
-    props.y = props.y or 0
-    props.minWidth = props.minWidth or 0
-    props.minHeight = props.minHeight or 0
-    props.maxWidth = props.maxWidth or props.width
-    props.maxHeight = props.maxHeight or props.height
-    props.display = props.display or 'static'
-    props.direction = props.direction or 'column'
-    props.wrap = props.wrap or 'nowrap'
-
-    local newProps = {}
+function normalizeProps(element, props)
     for k, v in pairs(props) do
         local value = (type(v) == 'function') and memo(v) or v
         if (isReactive(value)) then
-            newProps[k] = value.peek()
-            newProps['_' .. k] = value
+            element.props[k] = value.peek()
+            element.props['_' .. k] = value
             effect(function()
-                newProps[k] = value.get()
+                element.props[k] = value.get()
             end)
         else
-            newProps[k] = value
-            newProps['_' .. k] = value
+            element.props[k] = value
+            element.props['_' .. k] = value
         end
     end
+end
 
-    local element = {
-        tag = tag,
-        props = newProps,
-        children = children,
-        parent = nil,
-        events = props.on or {},
-        blockBoxX = 0,
-        blockBoxY = 0,
-        highestChildHeight = 0,
-        absX = 0,
-        absY = 0,
-        absW = props.width,
-        absH = props.height,
-        absMaxW = props.maxWidth or 0,
-        absMaxH = props.maxHeight or 0,
-        absMinW = props.minWidth or 0,
-        absMinH = props.minHeight or 0,
-    }
-    
+function normalizeChildren(element, children)
     if (type(children) == 'function') then
         local cMemo = memo(children)
         effect(function()
@@ -72,16 +39,9 @@ function h(tag, props, children)
             end
         end
     end
+end
 
-    local addEventListener = function(event, callback)
-        element.events[event] = callback
-    end
-
-    local ref = props.ref
-    if (ref) then
-        ref.set({ addEventListener })
-    end
-    
+function registerCustomEvents(element)
     if (element.events.hover) then
         local callback = element.events.hover
         element.events.mouseIn = function()
@@ -90,6 +50,10 @@ function h(tag, props, children)
         element.events.mouseOut = function()
             callback({ target = element, data = { state = 'out' } })
         end
+    end
+
+    if (element.events.created) then
+        eventHandlers.created(element, element.events.created)
     end
 
     for k, v in pairs(element.events) do
@@ -104,15 +68,61 @@ function h(tag, props, children)
             end
         end
     end
-
-    if (element.events.created) then
-        eventHandlers.created(element, element.events.created)
-    end
-    return element
 end
 
-function lazy(elementGetter)
-    return elementGetter
+function loadRef(element, ref)
+    if (ref) then
+        local function addEventListener(event, callback)
+            element.events[event] = callback
+        end
+        ref.set({ addEventListener })
+    end
+end
+
+function h(tag, props, children)
+    if (not tag) then error('Element tag is required', 2) end
+    if (not props) then error('Element props is required', 2) end -- __DEV__
+    
+    children = children or {}
+    props.postGUI = props.postGUI or false
+    props.x = props.x or 0
+    props.y = props.y or 0
+    props.width = props.width or '100%'
+    props.height = props.height or '100%'
+    props.minWidth = props.minWidth or 0
+    props.minHeight = props.minHeight or 0
+    props.maxWidth = props.maxWidth or '100%'
+    props.maxHeight = props.maxHeight or '100%'
+    props.display = props.display or 'static'
+    props.direction = props.direction or 'column'
+    props.wrap = props.wrap or 'nowrap'
+
+    local element = {
+        tag = tag,
+        props = props,
+        children = children,
+        parent = nil,
+        events = props.on or {},
+        blockBoxX = 0,
+        blockBoxY = 0,
+        highestChildWidth = 0,
+        highestChildHeight = 0,
+        absX = 0,
+        absY = 0,
+        absW = props.width,
+        absH = props.height,
+        absMaxW = props.maxWidth,
+        absMaxH = props.maxHeight,
+        absMinW = props.minWidth,
+        absMinH = props.minHeight,
+    }
+    
+    normalizeProps(element, element.props)
+    normalizeChildren(element, children)
+    loadRef(element, props.ref)
+    registerCustomEvents(element)
+
+    return element
 end
 
 function getElementByKey(key, value, els)
@@ -158,7 +168,7 @@ end
 local screen = Screen({})
 elements[#elements + 1] = screen
 
-local mouse = {}
+mouse = {}
 
 function updateMouse()
     mouse.state = isCursorShowing()
@@ -166,12 +176,6 @@ function updateMouse()
         local cx, cy = getCursorPosition()
         mouse.x, mouse.y = cx * screenWidth, cy * screenHeight
     end
-end
-
-function isMouseInPosition(x, y, w, h)
-    if (not mouse.state) then return end
-    local mx, my = mouse.x, mouse.y
-    return ((mx >= x and mx <= x + w) and (my >= y and my <= y + h))
 end
 
 local function updateUI()

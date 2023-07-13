@@ -30,4 +30,13 @@ eventHandlers = {
     created = function(element, callback)
         callback({ target = element })
     end,
+
+    playerDamage = function(element, callback)
+        addEventHandler('onClientPedDamage', root, function(...)
+            local parameters = {...}
+            local updatedLife = getElementHealth(source) - parameters[4]
+            iprint(updatedLife)
+            -- callback({ target = element , data = { newLife =  }})
+        end)
+    end
 }

@@ -33,7 +33,14 @@ function dxDrawText(t, x, y, r, b, ...)
 end
 
 function normalizePercent(str, defaultValue)
-    if (not (type(str) == 'string')) then return (not defaultValue) and str or defaultValue end
+    if (not (type(str) == 'string')) then
+        if (not defaultValue) then
+            return str
+        else
+            return defaultValue
+        end
+    end
+
     local value = tonumber(str)
     if (not value) then
         value = select(3, str:find('([%d%.]+)%%'))
@@ -58,6 +65,24 @@ function normalizeInset(_inset)
         b = type(inset[3]) == 'string' and 0 or inset[3] or 0,
         l = type(inset[4]) == 'string' and 0 or inset[4] or 0
     }
+end
+
+function normalizeSize(parentKey, child, childKey, paddingA, defaultValue)
+    local parent = child.parent
+    local value = child.props[childKey]
+
+    if (value == 'auto') then
+        return defaultValue or 0
+    end
+
+    if (not parent) then return value end
+
+    if (isPercent(value)) then
+        local parentSizeValue = parent[parentKey]
+        local parentContentSizeValue = parentSizeValue - paddingA
+        return parentContentSizeValue * normalizePercent(value)
+    end
+    return value
 end
 
 function normalizeSignal(signal)
@@ -101,4 +126,10 @@ function normalizeDirectionalProp(value, defaultValue)
         value.l = value[4] or defaultValue
     end
     return value
+end
+
+function isMouseInPosition(x, y, w, h)
+    if (not mouse.state) then return end
+    local mx, my = mouse.x, mouse.y
+    return ((mx >= x and mx <= x + w) and (my >= y and my <= y + h))
 end

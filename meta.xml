@@ -11,6 +11,7 @@
 
     <!-- TESTS -->
     <script src='test.lua' type='client' cache='false' />
+    <script src='example_hud.lua' type='client' cache='false' />
 
     <file src='icon.png' />
 </meta>
