@@ -157,3 +157,11 @@ end
 function getSafeProp(element, key)
     return element.signals[key] and element.signals[key].get() or element.props[key]
 end
+
+function tryCatch(tryFunc, catchFunc)
+    local status, error = pcall(tryFunc)
+    
+    if (not status) then
+        catchFunc(error)
+    end
+end
