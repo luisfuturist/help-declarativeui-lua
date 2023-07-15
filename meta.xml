@@ -1,8 +1,14 @@
 <meta>
+    <script src='utils/lang.lua' type='client' cache='false' />
+    <script src='utils/math.lua' type='client' cache='false' />
+    <script src='utils/input.lua' type='client' cache='false' />
+    <script src='utils/draw.lua' type='client' cache='false' />
+    <script src='utils/element.lua' type='client' cache='false' />
+
+    <script src='utils.lua' type='client' cache='false' />
     <script src='event-parameters.lua' type='client' cache='false' />
     <script src='event-handlers.lua' type='client' cache='false' />
     <script src='reactivity.lua' type='client' cache='false' />
-    <script src='utils.lua' type='client' cache='false' />
     <script src='components.lua' type='client' cache='false' />
     <script src='document.lua' type='client' cache='false' />
     <script src='drawers.lua' type='client' cache='false' />
