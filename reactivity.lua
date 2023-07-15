@@ -1,7 +1,25 @@
 local context = {}
+
 function signal(initialValue)
     local value = initialValue
     local listeners = {}
+
+    local function sub()
+        local current = context[#context]
+        if (current) then
+            local exists = false
+            for i = 1, #listeners do
+                if (listeners[i] == current) then
+                    exists = true
+                    break
+                end
+            end
+
+            if (not exists) then
+                listeners[#listeners + 1] = current
+            end
+        end
+    end
 
     local function unsub(callback)
         for i = 1, #listeners do
@@ -12,29 +30,22 @@ function signal(initialValue)
         end
     end
 
-    local function get()
-        local current = context[#context]
-        if (current) then
-            local exists = false
-            for i = 1, #listeners do
-                if (listeners[i] == current) then
-                    exists = true
-                    break
-                end
-            end
-            if (not exists) then
-                listeners[#listeners+1] = current
-            end
+    local function notify()
+        for i = 1, #listeners do
+            listeners[i]()
         end
+    end
+
+    local function get()
+        sub()
         return value
     end
 
     local function set(newValue)
         if (value == newValue) then return end
         value = newValue
-        for i = 1, #listeners do
-            listeners[i]()
-        end
+
+        notify()
     end
 
     local function peek()
