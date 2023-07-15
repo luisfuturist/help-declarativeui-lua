@@ -1,6 +1,7 @@
 local context = {}
 local isBatching = false
 local batches = {}
+local isUntracking = false
 
 function signal(initialValue)
     local value = initialValue
@@ -39,7 +40,7 @@ function signal(initialValue)
     end
 
     local function get()
-        sub()
+        if (not isUntracking) then sub() end
         return value
     end
 
@@ -67,11 +68,21 @@ function signal(initialValue)
     }
 end
 
+function untrack(callback)
+    local prevIsUntracking = isUntracking
+
+    isUntracking = true
+
+    pcall(callback)
+
+    isUntracking = prevIsUntracking
+end
+
 function effect(callback)
     local disposed = false
-    
+
     local function execute()
-        context[#context+1] = execute
+        context[#context + 1] = execute
         if (not disposed) then
             callback()
         end
