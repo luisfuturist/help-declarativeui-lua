@@ -103,14 +103,6 @@ function _normalizeSize(_parentSignal, child, childSignal, paddingA, defaultValu
     return value
 end
 
-
-function normalizeSignal(signal)
-    if (type(signal) == 'function')  then
-        return safeGet(memo(signal))
-    end
-    return safeGet(signal)
-end
-
 function normalizeProp(value, amount, defaultValue)
     value = value or {}
     

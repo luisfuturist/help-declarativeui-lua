@@ -137,9 +137,14 @@ function isReactive(value)
     return type(value) == 'table' and type(value.get) == 'function'
 end
 
-function safeGet(value, default)
+function unwrap(value, default)
     default = default or 0
-    return (value and (isReactive(value) and value.peek() or value) or default)
+
+    if isReactive(value) then
+        return value.peek() or default
+    else
+        return value or default
+    end
 end
 
 function safeWrap(value)

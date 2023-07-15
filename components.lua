@@ -29,7 +29,7 @@ function Text(props, children)
     props.fRotationCenterX = props.fRotationCenterX or 0
     props.fRotationCenterY = props.fRotationCenterY or 0
 
-    local textWidth, textHeight = dxGetTextSize(normalizeSignal(children), 0, 1, props.font, props.wordBreak, props.colorCoded)
+    local textWidth, textHeight = dxGetTextSize(unwrap(children), 0, 1, props.font, props.wordBreak, props.colorCoded)
     props.width = props.width or textWidth
     props.height = props.height or textHeight
 

@@ -71,7 +71,7 @@ function registerBoxModel(child)
         local inset = normalizeInset(_propsInset.get())
         local p = _p.get()
 
-        child.absX = parent.absX + safeGet(child.signals.x)
+        child.absX = parent.absX + unwrap(child.signals.x, 0)
         child.absX = child.absX + p.l + m.l + inset.l - inset.r + (type(_propsInset.get()[2]) == 'number' and parent.absW - child.absW - p.l - p.r or 0)
     end)
 
@@ -80,7 +80,7 @@ function registerBoxModel(child)
         local inset = normalizeInset(_propsInset.get())
         local p = _p.get()
 
-        child.absY = parent.absY + safeGet(child.signals.y)
+        child.absY = parent.absY + unwrap(child.signals.y, 0)
         child.absY = child.absY + p.t + m.t + inset.t - inset.b + (type(_propsInset.get()[3]) == 'number' and parent.absH - child.absH - p.t - p.b or 0)
     end)
 
