@@ -1,4 +1,6 @@
 local context = {}
+local isBatching = false
+local batches = {}
 
 function signal(initialValue)
     local value = initialValue
@@ -45,6 +47,11 @@ function signal(initialValue)
         if (value == newValue) then return end
         value = newValue
 
+        if (isBatching) then
+            batches[#batches] = notify
+            return
+        end
+
         notify()
     end
 
@@ -77,6 +84,25 @@ function effect(callback)
 
     execute()
     return dispose
+end
+
+function batch(fn)
+    local prevIsBatching = isBatching
+    local prevBatch = batches[#batches];
+    isBatching = true
+    batches[#batches] = {}
+
+    pcall(fn)
+
+    local notify = batches[#batches];
+    if (type(notify) == 'function' and not prevIsBatching) then
+        notify()
+    end
+
+    table.remove(batches)
+
+    isBatching = prevIsBatching
+    batches[#batches] = prevBatch
 end
 
 function memo(callback)
