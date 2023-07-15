@@ -85,11 +85,30 @@ function normalizeSize(parentKey, child, childKey, paddingA, defaultValue)
     return value
 end
 
+function _normalizeSize(_parentSignal, child, childSignal, paddingA, defaultValue)
+    local parent = child.parent
+    local value = childSignal.get()
+
+    if (value == 'auto') then
+        return defaultValue or 0
+    end
+
+    if (not parent) then return value end
+
+    if (isPercent(value)) then
+        local parentSizeValue = _parentSignal.get() or 0
+        local parentContentSizeValue = parentSizeValue - paddingA
+        return parentContentSizeValue * normalizePercent(value)
+    end
+    return value
+end
+
+
 function normalizeSignal(signal)
     if (type(signal) == 'function')  then
-        return unwrap(memo(signal))
+        return safeGet(memo(signal))
     end
-    return unwrap(signal)
+    return safeGet(signal)
 end
 
 function normalizeProp(value, amount, defaultValue)
@@ -132,4 +151,17 @@ function isMouseInPosition(x, y, w, h)
     if (not mouse.state) then return end
     local mx, my = mouse.x, mouse.y
     return ((mx >= x and mx <= x + w) and (my >= y and my <= y + h))
+end
+
+function isMouseOverElement(element)
+    return isMouseInPosition(
+        element.absX,
+        element.absY,
+        element.absW,
+        element.absH
+    )
+end
+
+function getSafeProp(element, key)
+    return element.signals[key] and element.signals[key].get() or element.props[key]
 end

@@ -1,22 +1,34 @@
--- local _root = getScreen()
+local _root = getScreen()
 
--- local function CounterClicks()
---     local count = signal(0)
---     local color = signal({ 255, 255, 255 })
---     return Text({
---         x = _root.props.width / 2,
---         y = _root.props.height / 2,
---         color = color,
---         on = {
---             mouseReleased = function()
---                 count.set(count.get() + 1)
---             end,
+local function comp()
+    local s = signal(1)
 
---             hover = function(e)
---                 color.set(e.data.state == 'in' and { 255, 0, 0 } or { 255, 255, 255 })
---             end
---         },
---     }, function() return 'You clicked ' .. count.get() .. ' times' end)
--- end
+    setTimer(function()
+        s.set(s.get() + 1)
+    end, 1000, 0)
 
--- render(_root, { CounterClicks() })
+    return Rect({
+        x = function()
+            return _root.props.width / 2 - (s.get() * 10)
+        end,
+        y = 500,
+        width = 100,
+        height = 100,
+        color = function()
+            return s.get() > 1 and { 255, 0, 0 } or { 0, 0, 0 }
+        end,
+        padding = function ()
+            return s.get() > 1 and s.get() * 10 or 0
+        end,
+        test = s,
+    }, {
+        Rect({
+            width = 20,
+            height = 20,
+        })
+    })
+end
+
+render(_root, {
+    comp()
+})

@@ -46,35 +46,58 @@ function update(els)
     end
 end
 
-    -- local x = wrap(childProps._x)
-    -- local parentX = wrap(parent and parent.absX or 0)
-    -- effect(function()
-    --     child.absX = x.get() + parentX.get()
-    -- end)
+function registerBoxModel(child)
+    local parent = child.parent
 
-    -- local y = wrap(childProps._y)
-    -- local parentY = wrap((parent and parent.absY or 0))
-    -- effect(function()
-    --     child.absY = y.get() + parentY.get()
-    -- end)
+    local _m = memo(function()
+        return normalizeDirectionalProp(getSafeProp(child, 'margin'), 0)
+    end)
+    local _propsInset = memo(function()
+        return normalizeProp(getSafeProp(child, 'inset'), 4, 'auto')
+    end)
+    local _p = memo(function()
+        return normalizeDirectionalProp(getSafeProp(parent, 'padding'), 0)
+    end)
+    local _parentAbsW = memo(function()
+        return getSafeProp(parent, 'absW')
+    end)
+    local _parentAbsH = memo(function()
+        return getSafeProp(parent, 'absH')
+    end)
 
-    -- local w = wrap(childProps._width)
-    -- effect(function()
-    --     child.absW = w.get()
-    -- end)
 
-function updateNode(parent, child)
-    child.parent = parent
+    effect(function()
+        local m = _m.get()
+        local inset = normalizeInset(_propsInset.get())
+        local p = _p.get()
+
+        child.absX = parent.absX + safeGet(child.signals.x)
+        child.absX = child.absX + p.l + m.l + inset.l - inset.r + (type(_propsInset.get()[2]) == 'number' and parent.absW - child.absW - p.l - p.r or 0)
+    end)
+
+    effect(function()
+        local m = _m.get()
+        local inset = normalizeInset(_propsInset.get())
+        local p = _p.get()
+
+        child.absY = parent.absY + safeGet(child.signals.y)
+        child.absY = child.absY + p.t + m.t + inset.t - inset.b + (type(_propsInset.get()[3]) == 'number' and parent.absH - child.absH - p.t - p.b or 0)
+    end)
+
+    effect(function()
+        local p = _p.get()
+        child.absW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'width')), p.l + p.r, 0)
+        child.absMaxW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'maxWidth')), p.l + p.r, 0)
+        child.absMinW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'minWidth')), p.l + p.r, 0)
+    end)
+
+    effect(function()
+        local p = _p.get()
+        child.absH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'height')), p.t + p.b, 0)
+        child.absMaxH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'maxHeight')), p.t + p.b, 0)
+        child.absMinH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'minHeight')), p.t + p.b, 0)
+    end)
     
-    -- reactivity
-    local x = wrap(child.props._x)
-    local y = wrap(child.props._y)
-    local width = wrap(child.props._width)
-    local height = wrap(child.props._height)
-    local parentX = wrap(parent.props._x)
-    local parentY = wrap(parent.props._y)
-    local parentW = wrap(parent.props._width)
-    local parentH = wrap(parent.props._height)
     effect(function()
         local gap = parent and normalizeProp(parent.props.gap, 2, 0) or { 0, 0 }
         local m = normalizeDirectionalProp(child.props.margin, 0)
@@ -84,28 +107,15 @@ function updateNode(parent, child)
         local px = p.l + p.r
         local py = p.t + p.b
     
-        -- box
-        child.absX = parent.absX + child.props.x
-        child.absY = parent.absY + child.props.y
-        child.absW = normalizeSize('absW', child, 'width', px, 0)
-        child.absH = normalizeSize('absH', child, 'height', py, 0)
-        child.absMaxW = normalizeSize('absW', child, 'maxWidth', px)
-        child.absMaxH = normalizeSize('absH', child, 'maxHeight', py)
-        child.absMinW = normalizeSize('absW', child, 'minWidth', px)
-        child.absMinH = normalizeSize('absH', child, 'minHeight', py)
-        
-        child.absX = parent.absX + p.l + m.l + inset.l - inset.r + (type(propsInset[2]) == 'number' and parent.absW - child.absW - p.l - p.r or 0) 
-        child.absY = parent.absY + p.t + m.t + inset.t - inset.b + (type(propsInset[3]) == 'number' and parent.absH - child.absH - p.t - p.b or 0)
-    
         -- overflow
-        local overflow = normalizeProp(parent.props.overflow, 2, 'visible')
-        if (overflow[1] == 'hidden') then
-            child.absW = math.min(parent.absW - p.l - p.r, child.absW)
-        end
+        -- local overflow = normalizeProp(parent.props.overflow, 2, 'visible')
+        -- if (overflow[1] == 'hidden') then
+        --     child.absW = math.min(parent.absW - p.l - p.r, child.absW)
+        -- end
         
-        if (overflow[2] == 'hidden') then
-            child.absH = math.min(parent.absH - p.t - p.b, child.absH)
-        end
+        -- if (overflow[2] == 'hidden') then
+        --     child.absH = math.min(parent.absH - p.t - p.b, child.absH)
+        -- end
     
         -- layout
         parent.highestChildWidth = math.max(parent.highestChildWidth, child.absW)
@@ -143,15 +153,14 @@ function updateNode(parent, child)
             end
         end
     
-        -- 
-         if (parent.props.display == 'block') then
-            if (parent.props.wrap == 'nowrap') then
+        if (parent.props.display == 'block') then
+            if (parent.props.safeWrap == 'nosafeWrap') then
                 if (parent.props.direction == 'column') then
                     child.absY = child.absY + child.blockBoxY
                 elseif (parent.props.direction == 'row') then
                     child.absX = child.absX + child.blockBoxX
                 end
-            -- elseif (parentProps.wrap == 'wrap') then
+            -- elseif (parentProps.safeWrap == 'safeWrap') then
             --     if (parentProps.direction == 'row') then
             --         if (parentElement.absX + element.blockBoxX >= parentElement.absX + parentContent.w) then
             --             box.y = box.y + parent.highestChildHeight
@@ -167,7 +176,19 @@ function updateNode(parent, child)
 
         
     end)
+end
 
+function updateNode(parent, child)
+    child.parent = parent
+    
+    for k in pairs(child.signals) do
+        local s = signal(child.signals[k])
+        effect(function()
+            child.props[k] = s.get()
+        end)
+    end
+    
+    registerBoxModel(child)
     updateTree(child, child.children)
 end
 

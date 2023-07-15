@@ -1,13 +1,8 @@
 eventHandlers = {
     mousePressed = function(element, callback)
         addEventHandler('onClientClick', root, function(...)
-            local parameters = {...}
-            if (isMouseInPosition(
-                element.props.x,
-                element.props.y,
-                element.props.width,
-                element.props.height
-            ) and parameters[2] == 'down') then
+            local parameters = { ... }
+            if (isMouseOverElement(element) and parameters[2] == 'down') then
                 callback({ target = element, data = eventParameters['onClientClick'](...) })
             end
         end)
@@ -15,13 +10,8 @@ eventHandlers = {
 
     mouseReleased = function(element, callback)
         addEventHandler('onClientClick', root, function(...)
-            local parameters = {...}
-            if (isMouseInPosition(
-                element.props.x,
-                element.props.y,
-                element.props.width,
-                element.props.height
-            ) and parameters[2] == 'up') then
+            local parameters = { ... }
+            if (isMouseOverElement(element) and parameters[2] == 'up') then
                 callback({ target = element, data = eventParameters['onClientClick'](...) })
             end
         end)
@@ -33,7 +23,7 @@ eventHandlers = {
 
     playerDamage = function(element, callback)
         addEventHandler('onClientPedDamage', root, function(...)
-            local parameters = {...}
+            local parameters = { ... }
             local updatedLife = getElementHealth(source) - parameters[4]
             iprint(updatedLife)
             -- callback({ target = element , data = { newLife =  }})

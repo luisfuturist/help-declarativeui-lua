@@ -7,13 +7,12 @@ function normalizeProps(element, props)
         local value = (type(v) == 'function') and memo(v) or v
         if (isReactive(value)) then
             element.props[k] = value.peek()
-            element.props['_' .. k] = value
+            element.signals[k] = value
             effect(function()
                 element.props[k] = value.get()
             end)
         else
             element.props[k] = value
-            element.props['_' .. k] = value
         end
     end
 end
@@ -95,11 +94,12 @@ function h(tag, props, children)
     props.maxHeight = props.maxHeight or '100%'
     props.display = props.display or 'static'
     props.direction = props.direction or 'column'
-    props.wrap = props.wrap or 'nowrap'
+    props.safeWrap = props.safeWrap or 'nosafeWrap'
 
     local element = {
         tag = tag,
         props = props,
+        signals = {},
         children = children,
         parent = nil,
         events = props.on or {},
