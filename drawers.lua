@@ -20,7 +20,7 @@ drawers = {
         local alpha = color[4] and color[4] * opacity or opacity
 
         dxDrawText(
-            element.children[1],
+            element.props.value,
             element.absX, element.absY, element.absW, element.absH,
             rgba(
                 color[1],
