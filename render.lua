@@ -49,6 +49,12 @@ end
 function registerBoxModel(child)
     local parent = child.parent
 
+    local _x = memo(function()
+        return getSafeProp(child, 'x', 0)
+    end)
+    local _y = memo(function()
+        return getSafeProp(child, 'y', 0)
+    end)
     local _m = memo(function()
         return normalizeDirectionalProp(getSafeProp(child, 'margin'), 0)
     end)
@@ -59,10 +65,12 @@ function registerBoxModel(child)
         return normalizeDirectionalProp(getSafeProp(parent, 'padding'), 0)
     end)
     local _parentAbsW = memo(function()
-        return getSafeProp(parent, 'absW')
+        -- return getSafeProp(parent, 'absW') 
+        return parent.absW 
     end)
     local _parentAbsH = memo(function()
-        return getSafeProp(parent, 'absH')
+        -- return getSafeProp(parent, 'absH')
+        return parent.absH
     end)
     local _overflow = memo(function()
         return normalizeProp(parent.props.overflow, 2, 'visible')
@@ -101,12 +109,30 @@ function registerBoxModel(child)
         child.absMaxH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'maxHeight')), py, 0)
         child.absMinH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'minHeight')), py, 0)
     end)
+
+    effect(function()
+        local overflow = _overflow.get()
+        local p = _p.get()
+        local m = _m.get()
+        if (overflow[1] == 'hidden') then
+            child.absW = math.min(_parentAbsW.get() - p.l - _x.get() - m.l, child.absW)
+        end
+    end)
+
+    effect(function()
+        local overflow = _overflow.get()
+        local p = _p.get()
+        local m = _m.get()
+        if (overflow[2] == 'hidden') then
+            child.absH = math.min(_parentAbsH.get() - p.t - _y.get() - m.t, child.absH)
+        end
+    end)
+
+
     
     effect(function()
         local gap = parent and normalizeProp(parent.props.gap, 2, 0) or { 0, 0 }
-        local m = normalizeDirectionalProp(child.props.margin, 0)
         local propsInset = normalizeProp(child.props.inset, 4, 'auto')
-        local inset = normalizeInset(propsInset)
         local p = normalizeDirectionalProp(parent.props.padding, 0)
     
         -- layout
@@ -145,14 +171,15 @@ function registerBoxModel(child)
             end
         end
     
+        -- display
         if (parent.props.display == 'block') then
-            if (parent.props.safeWrap == 'nosafeWrap') then
+            if (parent.props.wrap == 'nowrap') then
                 if (parent.props.direction == 'column') then
                     child.absY = child.absY + child.blockBoxY
                 elseif (parent.props.direction == 'row') then
                     child.absX = child.absX + child.blockBoxX
                 end
-            -- elseif (parentProps.safeWrap == 'safeWrap') then
+            -- elseif (parentProps.wrap == 'wrap') then
             --     if (parentProps.direction == 'row') then
             --         if (parentElement.absX + element.blockBoxX >= parentElement.absX + parentContent.w) then
             --             box.y = box.y + parent.highestChildHeight
