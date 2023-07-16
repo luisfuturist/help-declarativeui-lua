@@ -64,15 +64,8 @@ function registerBoxModel(child)
     local _parentAbsH = memo(function()
         return getSafeProp(parent, 'absH')
     end)
-
-
-    effect(function()
-        local m = _m.get()
-        local inset = normalizeInset(_propsInset.get())
-        local p = _p.get()
-
-        child.absX = parent.absX + unwrap(child.signals.x, 0)
-        child.absX = child.absX + p.l + m.l + inset.l - inset.r + (type(_propsInset.get()[2]) == 'number' and parent.absW - child.absW - p.l - p.r or 0)
+    local _overflow = memo(function()
+        return normalizeProp(parent.props.overflow, 2, 'visible')
     end)
 
     effect(function()
@@ -80,22 +73,33 @@ function registerBoxModel(child)
         local inset = normalizeInset(_propsInset.get())
         local p = _p.get()
 
-        child.absY = parent.absY + unwrap(child.signals.y, 0)
-        child.absY = child.absY + p.t + m.t + inset.t - inset.b + (type(_propsInset.get()[3]) == 'number' and parent.absH - child.absH - p.t - p.b or 0)
+        child.absX = parent.absX + getSafeProp(child, 'x', 0)
+        child.absX = child.absX + p.l + m.l + inset.l - inset.r + (type(_propsInset.get()[2]) == 'number' and _parentAbsW.get() - child.absW - p.l - p.r or 0)
+    end)
+
+    effect(function()
+        local m = _m.get()
+        local inset = normalizeInset(_propsInset.get())
+        local p = _p.get()
+
+        child.absY = parent.absY + getSafeProp(child, 'y', 0)
+        child.absY = child.absY + p.t + m.t + inset.t - inset.b + (type(_propsInset.get()[3]) == 'number' and _parentAbsH.get() - child.absH - p.t - p.b or 0)
     end)
 
     effect(function()
         local p = _p.get()
-        child.absW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'width')), p.l + p.r, 0)
-        child.absMaxW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'maxWidth')), p.l + p.r, 0)
-        child.absMinW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'minWidth')), p.l + p.r, 0)
+        local px = p.l + p.r
+        child.absW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'width')), px, 0)
+        child.absMaxW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'maxWidth')), px, 0)
+        child.absMinW = _normalizeSize(_parentAbsW, child, safeWrap(getSafeProp(child, 'minWidth')), px, 0)
     end)
 
     effect(function()
         local p = _p.get()
-        child.absH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'height')), p.t + p.b, 0)
-        child.absMaxH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'maxHeight')), p.t + p.b, 0)
-        child.absMinH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'minHeight')), p.t + p.b, 0)
+        local py = p.t + p.b
+        child.absH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'height')), py, 0)
+        child.absMaxH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'maxHeight')), py, 0)
+        child.absMinH = _normalizeSize(_parentAbsH, child, safeWrap(getSafeProp(child, 'minHeight')), py, 0)
     end)
     
     effect(function()
@@ -104,18 +108,6 @@ function registerBoxModel(child)
         local propsInset = normalizeProp(child.props.inset, 4, 'auto')
         local inset = normalizeInset(propsInset)
         local p = normalizeDirectionalProp(parent.props.padding, 0)
-        local px = p.l + p.r
-        local py = p.t + p.b
-    
-        -- overflow
-        -- local overflow = normalizeProp(parent.props.overflow, 2, 'visible')
-        -- if (overflow[1] == 'hidden') then
-        --     child.absW = math.min(parent.absW - p.l - p.r, child.absW)
-        -- end
-        
-        -- if (overflow[2] == 'hidden') then
-        --     child.absH = math.min(parent.absH - p.t - p.b, child.absH)
-        -- end
     
         -- layout
         parent.highestChildWidth = math.max(parent.highestChildWidth, child.absW)

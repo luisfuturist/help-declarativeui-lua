@@ -5,7 +5,6 @@
     <script src='utils/draw.lua' type='client' cache='false' />
     <script src='utils/element.lua' type='client' cache='false' />
 
-    <script src='utils.lua' type='client' cache='false' />
     <script src='event-parameters.lua' type='client' cache='false' />
     <script src='event-handlers.lua' type='client' cache='false' />
     <script src='reactivity.lua' type='client' cache='false' />

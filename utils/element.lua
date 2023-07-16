@@ -24,8 +24,8 @@ function isMouseOverElement(element)
     )
 end
 
-function getSafeProp(element, key)
-    return element.signals[key] and element.signals[key].get() or element.props[key]
+function getSafeProp(element, key, defaultValue)
+    return (element.signals[key] and element.signals[key].get() or element.props[key]) or defaultValue
 end
 
 function normalizeInset(_inset)
